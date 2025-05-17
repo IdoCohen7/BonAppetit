@@ -1,23 +1,30 @@
 import { useEffect, useState } from "react";
-import Sidebar from "../../components/Sidebar";
-import MenuSection from "../../components/MenuSection";
-import Cart from "../../components/Cart";
-import FloatingCartButton from "../../components/FloatingCartButton";
-import "../../styles/Delivery.css";
+import { useLocation } from "react-router-dom";
+import Sidebar from "./components/Sidebar";
+import MenuSection from "./components/MenuSection";
+import Cart from "./components/Cart";
+import FloatingCartButton from "./components/FloatingCartButton";
 import Logo from "../../assets/images/Logo.png";
+import { apiFetch } from "../../utils/api";
 
 const Delivery = () => {
+  const location = useLocation();
+  const { method, address, eta } = location.state || {};
+
   const [menuItems, setMenuItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [cart, setCart] = useState([]);
 
   useEffect(() => {
-    fetch("/mockMenu.json")
-      .then((res) => res.json())
+    apiFetch("/MenuItems")
       .then((data) => {
-        const availableItems = data.menuItems.filter((item) => item.available);
+        const items = JSON.parse(data.body);
+        const availableItems = items.filter((item) => item.available);
         setMenuItems(availableItems);
         setCategories([...new Set(availableItems.map((i) => i.category))]);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch menu items:", err);
       });
   }, []);
 
@@ -31,7 +38,7 @@ const Delivery = () => {
   }, [cart]);
 
   return (
-    <>
+    <div className="delivery-page">
       <header className="header">
         <div className="container header-flex">
           <a href="/" className="logo">
@@ -56,7 +63,7 @@ const Delivery = () => {
       </aside>
 
       <main className="main">
-        <section className="container delivery-section">
+        <section className="delivery-section">
           <h2 className="section-title">Place Your Order</h2>
           {categories.map((category) => (
             <MenuSection
@@ -68,14 +75,19 @@ const Delivery = () => {
             />
           ))}
         </section>
-        <Cart cart={cart} setCart={setCart} menuItems={menuItems} />
+        <Cart
+          cart={cart}
+          setCart={setCart}
+          menuItems={menuItems}
+          location={{ state: { method, address, eta } }}
+        />
         <FloatingCartButton cart={cart} />
       </main>
 
       <footer className="footer">
         <p>&copy; 2025 BonApetit. All rights reserved.</p>
       </footer>
-    </>
+    </div>
   );
 };
 
