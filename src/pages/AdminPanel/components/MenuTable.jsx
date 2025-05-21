@@ -1,9 +1,56 @@
 import React, { useState, useEffect } from "react";
-import { apiFetch } from "../../../utils/api"; // Adjust path if needed
+import { apiFetch } from "../../../utils/api";
 
 const MenuTable = ({ items: initialItems }) => {
   const [items, setItems] = useState(initialItems);
   const [isLoading, setIsLoading] = useState(true);
+  const [editItem, setEditItem] = useState(null);
+
+  const EditModal = ({ item, onSave, onClose }) => {
+    const [form, setForm] = useState({
+      name: item.name,
+      price: item.price,
+      description: item.description,
+    });
+
+    const handleChange = (e) => {
+      const { name, value } = e.target;
+      setForm({ ...form, [name]: value });
+    };
+
+    return (
+      <div className="modal-overlay">
+        <div className="modal">
+          <h3>Edit Menu Item</h3>
+          <label>
+            Name:
+            <input name="name" value={form.name} onChange={handleChange} />
+          </label>
+          <label>
+            Price:
+            <input
+              name="price"
+              type="number"
+              value={form.price}
+              onChange={handleChange}
+            />
+          </label>
+          <label>
+            Description:
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+            />
+          </label>
+          <div className="modal-actions">
+            <button onClick={() => onSave(form)}>Save</button>
+            <button onClick={onClose}>Cancel</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   useEffect(() => {
     setIsLoading(true);
@@ -23,16 +70,14 @@ const MenuTable = ({ items: initialItems }) => {
     if (index === -1) return;
 
     const currentItem = items[index];
-    const itemId = currentItem.PK;
     const newAvailable = !currentItem.available;
 
     try {
       await apiFetch("/MenuItems", {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ itemId }),
+        body: JSON.stringify({
+          itemId: PK,
+        }),
       });
 
       const updatedItems = [...items];
@@ -48,7 +93,29 @@ const MenuTable = ({ items: initialItems }) => {
   };
 
   const handleEdit = (item) => {
-    alert(`Editing item: ${item.name}`);
+    setEditItem(item);
+  };
+
+  const handleSave = async (formData) => {
+    try {
+      await apiFetch("/MenuItems", {
+        method: "PUT",
+        body: JSON.stringify({
+          PK: editItem.PK,
+          SK: editItem.SK,
+          ...formData,
+        }),
+      });
+
+      const updatedItems = items.map((i) =>
+        i.PK === editItem.PK && i.SK === editItem.SK ? { ...i, ...formData } : i
+      );
+      setItems(updatedItems);
+      setEditItem(null);
+    } catch (err) {
+      alert("Failed to save changes");
+      console.error(err);
+    }
   };
 
   return (
@@ -63,6 +130,7 @@ const MenuTable = ({ items: initialItems }) => {
             <tr>
               <th>Image</th>
               <th>Name</th>
+              <th>Description</th>
               <th>Price</th>
               <th>Status</th>
               <th>Actions</th>
@@ -71,7 +139,7 @@ const MenuTable = ({ items: initialItems }) => {
           <tbody>
             {items.length === 0 ? (
               <tr>
-                <td colSpan="5">No menu items available.</td>
+                <td colSpan="6">No menu items available.</td>
               </tr>
             ) : (
               items.map((item) => (
@@ -88,6 +156,7 @@ const MenuTable = ({ items: initialItems }) => {
                     />
                   </td>
                   <td>{item.name}</td>
+                  <td>{item.description}</td>
                   <td>₪{item.price}</td>
                   <td>
                     <span
@@ -109,6 +178,15 @@ const MenuTable = ({ items: initialItems }) => {
             )}
           </tbody>
         </table>
+      )}
+
+      {/* Modal מופיע רק אם יש פריט לעריכה */}
+      {editItem && (
+        <EditModal
+          item={editItem}
+          onSave={handleSave}
+          onClose={() => setEditItem(null)}
+        />
       )}
     </section>
   );
