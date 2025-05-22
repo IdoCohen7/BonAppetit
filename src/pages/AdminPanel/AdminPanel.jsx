@@ -14,6 +14,15 @@ const AdminPanel = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [couriers, setCouriers] = useState([]);
 
+  const fetchOrders = async () => {
+    try {
+      const data = await apiFetch("/Orders"); // אין צורך ב-JSON.parse
+      setOrders(data);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+    }
+  };
+
   const fetchMenuItems = async () => {
     try {
       const response = await apiFetch("/MenuItems");
@@ -34,7 +43,7 @@ const AdminPanel = () => {
   };
 
   useEffect(() => {
-    setOrders([]); // תוכל לשנות אם יש טעינת הזמנות קיימות
+    fetchOrders();
     fetchMenuItems();
     fetchCouriers();
 
@@ -42,7 +51,7 @@ const AdminPanel = () => {
     const socket = new WebSocket(WEBSOCKET_URL);
 
     socket.onopen = () => {
-      console.log("✅ WebSocket connected");
+      console.log("WebSocket connected successfully");
     };
 
     socket.onmessage = (event) => {
@@ -62,7 +71,10 @@ const AdminPanel = () => {
       }
     };
 
-    socket.onerror = (err) => console.error("WebSocket error:", err);
+    // eslint-disable-next-line no-unused-vars
+    socket.onerror = (err) => {
+      // ignore early connection errors
+    };
 
     return () => socket.close();
   }, []);
