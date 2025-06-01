@@ -16,7 +16,7 @@ const AdminPanel = () => {
 
   const fetchOrders = async () => {
     try {
-      const data = await apiFetch("/Orders"); // אין צורך ב-JSON.parse
+      const data = await apiFetch("/Orders");
       setOrders(data);
     } catch (error) {
       console.error("Error fetching orders:", error);
@@ -26,7 +26,7 @@ const AdminPanel = () => {
   const fetchMenuItems = async () => {
     try {
       const response = await apiFetch("/MenuItems");
-      const data = JSON.parse(response.body);
+      const data = response.body;
       setMenuItems(data);
     } catch (error) {
       console.error("Error fetching menu items:", error);

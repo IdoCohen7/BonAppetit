@@ -18,7 +18,7 @@ const Delivery = () => {
   useEffect(() => {
     apiFetch("/MenuItems")
       .then((data) => {
-        const items = JSON.parse(data.body);
+        const items = data;
         const availableItems = items.filter((item) => item.available);
         setMenuItems(availableItems);
         setCategories([...new Set(availableItems.map((i) => i.category))]);
