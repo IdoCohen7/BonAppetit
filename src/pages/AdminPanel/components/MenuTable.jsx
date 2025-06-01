@@ -56,7 +56,7 @@ const MenuTable = ({ items: initialItems }) => {
     setIsLoading(true);
     apiFetch("/MenuItems")
       .then((data) => {
-        const items = JSON.parse(data.body);
+        const items = data;
         setItems(items);
       })
       .catch((err) => {
@@ -65,8 +65,8 @@ const MenuTable = ({ items: initialItems }) => {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const handleToggle = async (PK, SK) => {
-    const index = items.findIndex((item) => item.PK === PK && item.SK === SK);
+  const handleToggle = async (PK) => {
+    const index = items.findIndex((item) => item.PK === PK);
     if (index === -1) return;
 
     const currentItem = items[index];
@@ -101,14 +101,13 @@ const MenuTable = ({ items: initialItems }) => {
       await apiFetch("/MenuItems", {
         method: "PUT",
         body: JSON.stringify({
-          PK: editItem.PK,
-          SK: editItem.SK,
+          itemId: editItem.PK,
           ...formData,
         }),
       });
 
       const updatedItems = items.map((i) =>
-        i.PK === editItem.PK && i.SK === editItem.SK ? { ...i, ...formData } : i
+        i.PK === editItem.PK ? { ...i, ...formData } : i
       );
       setItems(updatedItems);
       setEditItem(null);
@@ -143,7 +142,7 @@ const MenuTable = ({ items: initialItems }) => {
               </tr>
             ) : (
               items.map((item) => (
-                <tr key={`${item.PK}-${item.SK}`}>
+                <tr key={`${item.PK}`}>
                   <td>
                     <img
                       src={item.img}
@@ -160,7 +159,7 @@ const MenuTable = ({ items: initialItems }) => {
                   <td>₪{item.price}</td>
                   <td>
                     <span
-                      onClick={() => handleToggle(item.PK, item.SK)}
+                      onClick={() => handleToggle(item.PK)}
                       style={{
                         color: item.available ? "green" : "red",
                         fontWeight: "bold",
