@@ -56,8 +56,7 @@ const AdminPanel = () => {
 
     socket.onmessage = (event) => {
       try {
-        const newOrder = JSON.parse(event.data);
-        console.log("New order received:", newOrder);
+        const newOrder = JSON.parse(event.data).order;
 
         setOrders((prevOrders) => {
           // check if the order already exists
