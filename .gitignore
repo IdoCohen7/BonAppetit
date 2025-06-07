@@ -23,4 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 src/config/websocketConfig.js
+src/config/googleMapsApiKey.js
+src/config/apiConfig.js
+
 /cloudshellscripts
