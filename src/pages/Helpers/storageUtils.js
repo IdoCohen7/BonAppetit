@@ -1,21 +1,21 @@
 // שמירה לזיכרון המקומי
-export const saveToLocalStorage = (key, value) => {
+export const saveToSessionStorage = (key, value) => {
   try {
     const serializedValue = JSON.stringify(value);
-    localStorage.setItem(key, serializedValue);
+    sessionStorage.setItem(key, serializedValue);
   } catch (err) {
-    console.error("Error saving to localStorage", err);
+    console.error("Error saving to sessionStorage", err);
   }
 };
 
 // שליפה מהזיכרון המקומי
-export const loadFromLocalStorage = (key) => {
+export const loadFromSessionStorage = (key) => {
   try {
-    const serializedValue = localStorage.getItem(key);
+    const serializedValue = sessionStorage.getItem(key);
     if (serializedValue === null) return null;
     return JSON.parse(serializedValue);
   } catch (err) {
-    console.error("Error reading from localStorage", err);
+    console.error("Error reading from sessionStorage", err);
     return null;
   }
 };

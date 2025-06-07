@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { TextField } from '@mui/material';
 import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { saveToLocalStorage, loadFromLocalStorage } from '../../Helpers/storageUtils';
+import { saveToSessionStorage, loadFromSessionStorage } from '../../Helpers/storageUtils';
 
 const TimePickerMUI = () => {
   const [value, setValue] = useState(new Date());
@@ -18,7 +18,7 @@ const TimePickerMUI = () => {
   };
 
   useEffect(() => {
-    const savedTime = loadFromLocalStorage('chosenTime');
+    const savedTime = loadFromSessionStorage('chosenTime');
     const now = new Date();
     setMinTime(now);
 
@@ -37,7 +37,7 @@ const TimePickerMUI = () => {
   useEffect(() => {
     if (value) {
       const israelTime = formatToIsraelTime(value);
-      saveToLocalStorage('chosenTime', israelTime);
+      saveToSessionStorage('chosenTime', israelTime);
       console.log('Saved time:', israelTime); // ✅ כאן מודפס הזמן שנשמר
     }
   }, [value]);
