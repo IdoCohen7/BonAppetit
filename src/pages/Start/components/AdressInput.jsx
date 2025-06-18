@@ -13,7 +13,8 @@ const AddressInput = ({ onAddressSelect }) => {
       const address = place.formatted_address;
       const lat = place.geometry.location.lat();
       const lng = place.geometry.location.lng();
-      onAddressSelect({ address, lat, lng });
+      const placeId = place.place_id;
+      onAddressSelect({ address, lat, lng, placeId });
     }
   };
 
