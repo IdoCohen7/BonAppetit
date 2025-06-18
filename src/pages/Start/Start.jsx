@@ -8,6 +8,9 @@ import { saveToSessionStorage, loadFromSessionStorage } from "../Helpers/storage
 
 
 
+
+
+
 const OrderMethod = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState("initial");
@@ -22,12 +25,14 @@ const OrderMethod = () => {
 
   const chooseOption = (option) => {
     if (option === "pickup") {
+      saveToSessionStorage("orderType", "pickup");
       navigate("/menu", {
         state: {
           method: "pickup",
         },
       });
     } else if (option === "delivery") {
+      saveToSessionStorage("orderType", "delivery");
       setStep("address");
     }
   };

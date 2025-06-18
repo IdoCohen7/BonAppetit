@@ -6,6 +6,7 @@ import Cart from "./components/Cart";
 import FloatingCartButton from "./components/FloatingCartButton";
 import Logo from "../../assets/images/Logo.png";
 import { apiFetch } from "../../utils/api";
+import { saveToSessionStorage } from "../Helpers/storageUtils";
 
 const Delivery = () => {
   const location = useLocation();
@@ -35,6 +36,7 @@ const Delivery = () => {
 
   useEffect(() => {
     localStorage.setItem("bonapetit_cart", JSON.stringify(cart));
+    saveToSessionStorage("bonapetit_cart", cart);
   }, [cart]);
 
   return (
