@@ -1,4 +1,4 @@
-// DeliveryOrders.jsx – כולל מודלים ופונקציונליות מלאה לשני הכפתורים: Assign Courier + View Sent Orders
+// DeliveryOrders.jsx – כולל תיקון כפתורים, הצגת מודלים והגדלת כפתורים
 
 import React, { useState, useEffect } from "react";
 import { apiFetch } from "../../../utils/api";
@@ -10,6 +10,7 @@ const DeliveryOrders = ({ orders }) => {
   const [showReadyModal, setShowReadyModal] = useState(false);
   const [showCourierModal, setShowCourierModal] = useState(false);
   const [showSentModal, setShowSentModal] = useState(false);
+  const [showCouriersModal, setShowCouriersModal] = useState(false);
   const [statusChanges, setStatusChanges] = useState({});
 
   useEffect(() => {
@@ -79,6 +80,20 @@ const DeliveryOrders = ({ orders }) => {
       );
     } catch (err) {
       console.error("Failed to assign courier or update orders", err);
+    }
+  };
+
+  const updateCourierStatus = async (courierId, newAvailability) => {
+    try {
+      await apiFetch(`/Couriers/${encodeURIComponent(courierId)}`, {
+        method: "PUT",
+        body: JSON.stringify({ available: newAvailability }),
+      });
+      setCouriers((prev) =>
+        prev.map((c) => (c.PK === courierId ? { ...c, available: newAvailability } : c))
+      );
+    } catch (err) {
+      console.error("Failed to update courier status", err);
     }
   };
 
@@ -158,11 +173,11 @@ const DeliveryOrders = ({ orders }) => {
   const buttonStyle = {
     backgroundColor: "#007bff",
     color: "white",
-    padding: "8px 12px",
+    padding: "12px 18px",
     borderRadius: "12px",
     border: "none",
     fontWeight: "bold",
-    fontSize: "16px",
+    fontSize: "17px",
     cursor: "pointer",
   };
 
@@ -193,11 +208,6 @@ const DeliveryOrders = ({ orders }) => {
 
   return (
     <section style={{ padding: "10px 18px" }}>
-      <div style={{ position: "fixed", bottom: 30, right: 30, display: "flex", gap: 12 }}>
-        <button onClick={() => setShowSentModal(true)} style={buttonStyle}>View Sent Orders</button>
-        <button onClick={() => setShowReadyModal(true)} style={buttonStyle}>Assign Courier</button>
-      </div>
-
       {deliveryOrders.map((order) => (
         <div key={order.PK} style={{ backgroundColor: deliveryStatusColor(order.orderStatus), padding: 16, marginBottom: 12, borderRadius: 8, boxShadow: "0 2px 5px rgba(0,0,0,0.1)" }}>
           <h4>Order #{order.PK}</h4>
@@ -220,6 +230,12 @@ const DeliveryOrders = ({ orders }) => {
         </div>
       ))}
 
+      <div style={{ position: "fixed", bottom: 30, right: 30, display: "flex", gap: 16 }}>
+        <button onClick={() => setShowSentModal(true)} style={buttonStyle}>View Sent Orders</button>
+        <button onClick={() => setShowReadyModal(true)} style={buttonStyle}>Assign Courier</button>
+        <button onClick={() => setShowCouriersModal(true)} style={buttonStyle}>Courier Status</button>
+      </div>
+
       {showReadyModal && (
         <div style={modalStyle}>
           <h3>Select up to 5 orders</h3>
@@ -239,7 +255,7 @@ const DeliveryOrders = ({ orders }) => {
       {showCourierModal && (
         <div style={modalStyle}>
           <h3>Select Courier</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             {couriers.map((c) => (
               <button
                 key={c.PK}
@@ -272,7 +288,22 @@ const DeliveryOrders = ({ orders }) => {
               </ul>
             </div>
           ))}
-          <button onClick={() => setShowSentModal(false)} style={{ ...buttonStyle, backgroundColor: "#6c757d" }}>Close</button>
+          <button onClick={() => setShowSentModal(false)} style={{ ...buttonStyle, backgroundColor: "#6c757d", marginTop: 12 }}>Close</button>
+        </div>
+      )}
+
+      {showCouriersModal && (
+        <div style={modalStyle}>
+          <h3>Courier Status</h3>
+          {couriers.map((c) => (
+            <div key={c.PK} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <span>{c.name}</span>
+              <button onClick={() => updateCourierStatus(c.PK, !c.available)} style={{ ...buttonStyle, backgroundColor: c.available ? "#28a745" : "#dc3545" }}>
+                {c.available ? "Available" : "Unavailable"}
+              </button>
+            </div>
+          ))}
+          <button onClick={() => setShowCouriersModal(false)} style={{ ...buttonStyle, backgroundColor: "#6c757d", marginTop: 16 }}>Close</button>
         </div>
       )}
     </section>
