@@ -55,11 +55,12 @@ const buildOrderData = () => {
     items: loadFromSessionStorage("bonapetit_cart") || [],
     userId: loadFromSessionStorage("userId") || "unknown",
     orderType: loadFromSessionStorage("orderType") || "pickup",
-    orderStatus: loadFromSessionStorage("orderStatus") || "in-preparation",
-    address: loadFromSessionStorage("orderAddress") || null,
-    courierDepartureTime: loadFromSessionStorage("courierDepartureTime") || null,
+    orderStatus: loadFromSessionStorage("orderStatus") || "pending",
+    address: loadFromSessionStorage("address") || null,
+    courierDepartureTime: loadFromSessionStorage("chosenTime") || null,
     estimatedArrivalTime: loadFromSessionStorage("orderEta") || null,
     assignedCourierId: loadFromSessionStorage("assignedCourierId") || null
+
   };
 };
 

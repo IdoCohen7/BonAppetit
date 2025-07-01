@@ -8,27 +8,14 @@ const TimePickerMUI = () => {
   const [value, setValue] = useState(new Date());
   const [minTime, setMinTime] = useState(new Date());
 
-  const formatToIsraelTime = (date) => {
-    return date.toLocaleTimeString('he-IL', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-      timeZone: 'Asia/Jerusalem',
-    });
-  };
-
   useEffect(() => {
     const savedTime = loadFromSessionStorage('chosenTime');
     const now = new Date();
     setMinTime(now);
 
     if (savedTime) {
-      const [hours, minutes] = savedTime.split(':');
-      const loadedDate = new Date();
-      loadedDate.setHours(parseInt(hours));
-      loadedDate.setMinutes(parseInt(minutes));
-
-      if (loadedDate > now) {
+      const loadedDate = new Date(savedTime);
+      if (!isNaN(loadedDate.getTime()) && loadedDate > now) {
         setValue(loadedDate);
       }
     }
@@ -36,9 +23,8 @@ const TimePickerMUI = () => {
 
   useEffect(() => {
     if (value) {
-      const israelTime = formatToIsraelTime(value);
-      saveToSessionStorage('chosenTime', israelTime);
-      console.log('Saved time:', israelTime); // ✅ כאן מודפס הזמן שנשמר
+      saveToSessionStorage('chosenTime', value.toISOString());
+      console.log('Saved time:', value.toISOString());
     }
   }, [value]);
 
@@ -46,7 +32,7 @@ const TimePickerMUI = () => {
     <div style={{ marginTop: '20px', textAlign: 'center' }}>
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <TimePicker
-          label="choose time"
+          label="Choose time"
           value={value}
           onChange={(newValue) => setValue(newValue)}
           minTime={minTime}
