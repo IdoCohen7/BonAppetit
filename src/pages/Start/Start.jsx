@@ -37,6 +37,17 @@ const OrderMethod = () => {
     }
   };
 
+  function TimeToIsrael(estimatedTime) {
+    const date = new Date(estimatedTime);
+    return date.toLocaleTimeString('he-IL', {
+      timeZone: 'Asia/Jerusalem',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+  }
+
+
   const getRoundedIsraelTime = () => {
     const now = new Date();
 
@@ -150,7 +161,7 @@ const OrderMethod = () => {
           <div className="confirmation-container">
             <p>
               Estimated delivery time to <strong>{address}</strong> is:{" "}
-              <strong>{estimatedTime}</strong>
+              <strong>{TimeToIsrael(estimatedTime)}</strong>
             </p>
             <p>Do you want to continue with your order?</p>
             <div className="confirm-buttons">
