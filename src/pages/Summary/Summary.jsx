@@ -12,60 +12,60 @@ const OrderSummary = () => {
   }, 0);
 
   const handleConfirm = async () => {
-  try {
-    const result = await sendOrder();
-    console.log("Server response:", result);
-    alert("Your order has been sent to the restaurant!");
-    navigate("/");
-  } catch (err) {
-    alert("Error: " + err.message);
-  }
-};
-
-
-
-const sendOrder = async () => {
-  console.log(loadFromSessionStorage("bonapetit_cart"));
-  
-  const orderData = buildOrderData();
-
-  if (!orderData.items || orderData.items.length === 0) {
-    const message = "Cannot send order: cart is empty";
-    console.error(message);
-    throw new Error(message); // שינוי: לא Promise.reject אלא throw
-  }
-
-  try {
-    const result = await apiFetch("/Orders", {
-      method: "POST",
-      body: JSON.stringify(orderData)
-    });
-
-    console.log("Order placed successfully:", result);
-    sessionStorage.removeItem("orderItems");
-    return result; // שינוי: אין צורך ב-Promise.resolve
-  } catch (err) {
-    console.error("API error:", err);
-    throw err; // שינוי: לא Promise.reject אלא throw
-  }
-};
-
-const buildOrderData = () => {
-  return {
-    items: loadFromSessionStorage("bonapetit_cart") || [],
-    userId: loadFromSessionStorage("userId") || "unknown",
-    orderType: loadFromSessionStorage("orderType") || "pickup",
-    orderStatus: loadFromSessionStorage("orderStatus") || "pending",
-    address: loadFromSessionStorage("address") || null,
-    courierDepartureTime: loadFromSessionStorage("chosenTime") || null,
-    estimatedArrivalTime: loadFromSessionStorage("orderEta") || null,
-    assignedCourierId: loadFromSessionStorage("assignedCourierId") || null
-
+    try {
+      const result = await sendOrder();
+      console.log("Server response:", result);
+      alert("Your order has been sent to the restaurant!");
+      navigate(`/track?id=${result.orderId}`);
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
   };
-};
 
+  const sendOrder = async () => {
+    console.log(loadFromSessionStorage("bonapetit_cart"));
 
+    const orderData = buildOrderData();
 
+    if (!orderData.items || orderData.items.length === 0) {
+      const message = "Cannot send order: cart is empty";
+      console.error(message);
+      throw new Error(message); // שינוי: לא Promise.reject אלא throw
+    }
+
+    try {
+      // Check restaurant status before sending the order
+      const response = await apiFetch("/RestaurantStatus");
+      if (!response.isOpen) {
+        alert("The restaurant is currently closed. Please try again later.");
+        navigate("/");
+      } else {
+        const result = await apiFetch("/Orders", {
+          method: "POST",
+          body: JSON.stringify(orderData),
+        });
+        return result; // שינוי: אין צורך ב-Promise.resolve
+      }
+    } catch (err) {
+      console.error("API error:", err);
+      throw err; // שינוי: לא Promise.reject אלא throw
+    } finally {
+      sessionStorage.removeItem("orderItems");
+    }
+  };
+
+  const buildOrderData = () => {
+    return {
+      items: loadFromSessionStorage("bonapetit_cart") || [],
+      userId: loadFromSessionStorage("userId") || "unknown",
+      orderType: loadFromSessionStorage("orderType") || "pickup",
+      orderStatus: loadFromSessionStorage("orderStatus") || "pending",
+      address: loadFromSessionStorage("address") || null,
+      courierDepartureTime: loadFromSessionStorage("chosenTime") || null,
+      estimatedArrivalTime: loadFromSessionStorage("orderEta") || null,
+      assignedCourierId: loadFromSessionStorage("assignedCourierId") || null,
+    };
+  };
 
   return (
     <div className="order-summary-page">

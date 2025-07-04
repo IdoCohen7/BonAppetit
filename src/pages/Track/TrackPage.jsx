@@ -71,7 +71,7 @@ const TrackPage = () => {
       {order.orderType === "delivery" && (
         <>
           <p>
-            <strong>Address:</strong> {order.address}
+            <strong>Address:</strong> {JSON.parse(order.address).address}
           </p>
           <p>
             <strong>Estimated Arrival:</strong> {order.estimatedArrivalTime}

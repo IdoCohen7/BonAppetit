@@ -6,6 +6,7 @@ import Menu from "./pages/Menu/Menu.jsx";
 import Summary from "./pages/Summary/Summary.jsx";
 import AdminPanel from "./pages/AdminPanel/AdminPanel.jsx";
 import TrackPage from "./pages/Track/TrackPage.jsx";
+import "bootstrap/dist/css/bootstrap.min.css"; // Import Bootstrap CSS
 import "./styles/style.css";
 
 createRoot(document.getElementById("root")).render(

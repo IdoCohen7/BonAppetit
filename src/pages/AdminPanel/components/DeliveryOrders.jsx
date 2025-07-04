@@ -14,9 +14,11 @@ import {
   ViewSentModal,
   CouriersStatusModal,
 } from "./Modals";
+import Spinner from "react-bootstrap/Spinner";
 
 const DeliveryOrders = ({ orders }) => {
   const [localOrders, setLocalOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [couriers, setCouriers] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
   const [statusChanges, setStatusChanges] = useState({});
@@ -41,6 +43,7 @@ const DeliveryOrders = ({ orders }) => {
       try {
         const data = await apiFetch("/MenuItems");
         setMenuItems(data);
+        setLoading(false);
       } catch (err) {
         console.error("Failed to fetch menu items", err);
       }
@@ -61,8 +64,17 @@ const DeliveryOrders = ({ orders }) => {
       ...order,
       items: order.items?.map((i) => ({
         ...i,
-        name: i.name || itemMap[i.PK]?.name || itemMap[i.itemId]?.name || itemMap[i.productId]?.name || "Unnamed Item",
-        price: i.price ?? itemMap[i.PK]?.price ?? itemMap[i.itemId]?.price ?? itemMap[i.productId]?.price,
+        name:
+          i.name ||
+          itemMap[i.PK]?.name ||
+          itemMap[i.itemId]?.name ||
+          itemMap[i.productId]?.name ||
+          "Unnamed Item",
+        price:
+          i.price ??
+          itemMap[i.PK]?.price ??
+          itemMap[i.itemId]?.price ??
+          itemMap[i.productId]?.price,
       })),
     }));
 
@@ -98,7 +110,9 @@ const DeliveryOrders = ({ orders }) => {
         body: JSON.stringify(body),
       });
       setLocalOrders((prev) =>
-        prev.map((o) => (o.PK === orderId ? { ...o, orderStatus: newStatus } : o))
+        prev.map((o) =>
+          o.PK === orderId ? { ...o, orderStatus: newStatus } : o
+        )
       );
     } catch (err) {
       console.error("Failed to update order status", err);
@@ -171,22 +185,40 @@ const DeliveryOrders = ({ orders }) => {
   return (
     <section style={{ padding: "10px 18px" }}>
       <h2 style={{ marginBottom: 20 }}>Delivery Orders</h2>
-      {sortOrders(deliveryOrders, now).map((order) => (
-        <OrderCard
-          key={order.PK}
-          order={order}
-          now={now}
-          courierName={getCourierName(order.assignedCourierId)}
-          onStatusChange={handleStatusChange}
-          onConfirmStatus={confirmStatusChange}
-          newStatus={statusChanges[order.PK]}
-        />
-      ))}
+      {loading ? (
+        <Spinner animation="border" />
+      ) : (
+        sortOrders(deliveryOrders, now).map((order) => (
+          <OrderCard
+            key={order.PK}
+            order={order}
+            now={now}
+            courierName={getCourierName(order.assignedCourierId)}
+            onStatusChange={handleStatusChange}
+            onConfirmStatus={confirmStatusChange}
+            newStatus={statusChanges[order.PK]}
+          />
+        ))
+      )}
 
-      <div style={{ position: "fixed", bottom: 30, right: 30, display: "flex", gap: 16 }}>
-        <button onClick={() => setShowSentModal(true)} style={buttonStyle}>View Sent Orders</button>
-        <button onClick={() => setShowReadyModal(true)} style={buttonStyle}>Assign Courier</button>
-        <button onClick={() => setShowCouriersModal(true)} style={buttonStyle}>Courier Status</button>
+      <div
+        style={{
+          position: "fixed",
+          bottom: 30,
+          right: 30,
+          display: "flex",
+          gap: 16,
+        }}
+      >
+        <button onClick={() => setShowSentModal(true)} style={buttonStyle}>
+          View Sent Orders
+        </button>
+        <button onClick={() => setShowReadyModal(true)} style={buttonStyle}>
+          Assign Courier
+        </button>
+        <button onClick={() => setShowCouriersModal(true)} style={buttonStyle}>
+          Courier Status
+        </button>
       </div>
 
       {showReadyModal && (

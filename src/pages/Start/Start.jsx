@@ -1,15 +1,13 @@
-import { useState } from "react";
+import { useState, UseEffect, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Logo from "../../assets/images/Logo.png";
 import AddressInput from "./components/AdressInput";
 import TimePickerWrapper from "./components/TimePicker";
-import { saveToSessionStorage, loadFromSessionStorage } from "../Helpers/storageUtils";
-
-
-
-
-
-
+import {
+  saveToSessionStorage,
+  loadFromSessionStorage,
+} from "../Helpers/storageUtils";
+import { apiFetch } from "../../utils/api";
 
 const OrderMethod = () => {
   const navigate = useNavigate();
@@ -22,6 +20,11 @@ const OrderMethod = () => {
   const handleAddressSelect = (data) => {
     setAddressData(data);
   };
+
+  useEffect(() => {
+    // Check restaurant status when the component mounts
+    // checkRestaurantStatus();
+  }, []);
 
   const chooseOption = (option) => {
     if (option === "pickup") {
@@ -39,21 +42,20 @@ const OrderMethod = () => {
 
   function TimeToIsrael(estimatedTime) {
     const date = new Date(estimatedTime);
-    return date.toLocaleTimeString('he-IL', {
-      timeZone: 'Asia/Jerusalem',
-      hour: '2-digit',
-      minute: '2-digit',
+    return date.toLocaleTimeString("he-IL", {
+      timeZone: "Asia/Jerusalem",
+      hour: "2-digit",
+      minute: "2-digit",
       hour12: false,
     });
   }
-
 
   const getRoundedIsraelTime = () => {
     const now = new Date();
 
     // קבל את הזמן לפי שעון ישראל
     const israelTime = new Date(
-      now.toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' })
+      now.toLocaleString("en-US", { timeZone: "Asia/Jerusalem" })
     );
 
     const minutes = israelTime.getMinutes();
@@ -89,9 +91,13 @@ const OrderMethod = () => {
       // );
 
       if (loadFromSessionStorage("chosenTime") == null) {
-        setEstimatedTime(getRoundedIsraelTime().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-      }
-      else {
+        setEstimatedTime(
+          getRoundedIsraelTime().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        );
+      } else {
         setEstimatedTime(loadFromSessionStorage("chosenTime"));
       }
 
@@ -113,6 +119,20 @@ const OrderMethod = () => {
       });
     } else {
       window.location.reload();
+    }
+  };
+
+  const checkRestaurantStatus = async () => {
+    try {
+      const response = await apiFetch("/RestaurantStatus");
+      if (response.isOpen) {
+        console.log("Restaurant is open.");
+      } else {
+        alert("The restaurant is currently closed. Please try again later.");
+      }
+    } catch (error) {
+      console.error("Error checking restaurant status:", error);
+      alert("Failed to check restaurant status. Please try again later.");
     }
   };
 
