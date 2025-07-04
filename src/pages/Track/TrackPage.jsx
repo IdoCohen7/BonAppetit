@@ -17,32 +17,47 @@ const TrackPage = () => {
     }
 
     apiFetch(`/Orders/${orderId}`)
-      .then((data) => {
-        console.log("Order data:", data);
-        setOrder(data);
-      })
-      .catch((err) => {
-        console.error("Fetch error:", err);
-        setError(err.message);
-      })
+      .then((data) => setOrder(data))
+      .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [orderId]);
 
   const getProgress = (status) => {
     switch (status) {
       case "in-preparation":
-        return { percent: 30, color: "#e74c3c" }; // אדום
+        return { percent: 30, color: "#e74c3c" };
       case "on-the-way":
-        return { percent: 70, color: "#e67e22" }; // כתום
+        return { percent: 70, color: "#e67e22" };
       case "delivered":
       case "ready":
-        return { percent: 100, color: "#2ecc71" }; // ירוק
+        return { percent: 100, color: "#2ecc71" };
       default:
         return { percent: 0, color: "#ccc" };
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "-";
+    const date = new Date(dateStr);
+    return `${date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    })} | ${date.toLocaleDateString()}`;
+  };
+
+  if (loading) {
+    return (
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "200px" }}
+      >
+        <div className="spinner-border text-warning" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
   if (error) return <div style={{ color: "red" }}>{error}</div>;
   if (!order) return <div>No order data available.</div>;
 
@@ -52,12 +67,23 @@ const TrackPage = () => {
     <div className="track-container">
       <h2>Order Details</h2>
 
-      <div className="progress-bar-container">
+      <div
+        className="progress-bar-container"
+        style={{
+          height: "12px",
+          borderRadius: "8px",
+          backgroundColor: "#eee",
+          marginBottom: "1rem",
+        }}
+      >
         <div
           className="progress-bar-fill"
           style={{
             width: `${progress.percent}%`,
             backgroundColor: progress.color,
+            height: "100%",
+            borderRadius: "8px",
+            transition: "width 0.5s ease",
           }}
         />
       </div>
@@ -68,33 +94,71 @@ const TrackPage = () => {
       <p>
         <strong>Type:</strong> {order.orderType}
       </p>
+
       {order.orderType === "delivery" && (
         <>
           <p>
             <strong>Address:</strong> {JSON.parse(order.address).address}
           </p>
           <p>
-            <strong>Estimated Arrival:</strong> {order.estimatedArrivalTime}
+            <strong>Estimated Arrival:</strong>{" "}
+            {formatDate(order.estimatedArrivalTime)}
           </p>
         </>
       )}
+
       <p>
-        <strong>Created At:</strong> {order.createdAt}
+        <strong>Created At:</strong> {formatDate(order.createdAt)}
       </p>
-      <p>
-        <strong>Items:</strong>
-      </p>
-      <ul>
+
+      <div style={{ marginTop: "2rem" }}>
+        <h3 style={{ color: "#b58b56" }}>Items:</h3>
         {order.items?.length > 0 ? (
-          order.items.map((item, index) => (
-            <li key={index}>
-              {item.quantity}× {item.name}
-            </li>
-          ))
+          <div style={{ display: "grid", gap: "1rem" }}>
+            {order.items.map((item, index) => (
+              <div
+                key={index}
+                style={{
+                  display: "flex",
+                  gap: "1rem",
+                  background: "#fff8f0",
+                  padding: "1rem",
+                  borderRadius: "8px",
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+                }}
+              >
+                <img
+                  src={item.img}
+                  alt={item.name}
+                  style={{
+                    width: "64px",
+                    height: "64px",
+                    objectFit: "cover",
+                    borderRadius: "8px",
+                  }}
+                />
+                <div style={{ flexGrow: 1 }}>
+                  <p style={{ margin: 0, fontWeight: "bold" }}>{item.name}</p>
+                  <p
+                    style={{
+                      margin: "0.25rem 0",
+                      fontSize: "0.9rem",
+                      color: "#666",
+                    }}
+                  >
+                    {item.description}
+                  </p>
+                  <p style={{ margin: 0 }}>
+                    <strong>{item.quantity}×</strong> ₪{item.price}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
-          <li>No items found</li>
+          <p>No items found</p>
         )}
-      </ul>
+      </div>
     </div>
   );
 };
