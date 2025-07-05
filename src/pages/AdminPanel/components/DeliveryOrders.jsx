@@ -121,6 +121,7 @@ const DeliveryOrders = ({ orders }) => {
         assignedCourierId: courierId,
         courierDepartureTime: nowTime,
       })),
+      calculateRoute: true,
     };
 
     setCouriers((prev) =>

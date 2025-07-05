@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { formatAddress } from "./helpers";
+import { apiFetch } from "../../../utils/api";
+
 
 const modalStyle = {
   position: "fixed",
@@ -11,9 +13,9 @@ const modalStyle = {
   borderRadius: 20,
   boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
   zIndex: 1000,
-  minWidth: 320,
-  maxWidth: 520,
-  width: "90%",
+  minWidth: 360,
+  maxWidth: 600,
+  width: "95%",
 };
 
 const buttonStyle = {
@@ -25,6 +27,130 @@ const buttonStyle = {
   fontWeight: "bold",
   fontSize: "17px",
   cursor: "pointer",
+};
+
+const th = {
+  borderBottom: "1px solid #ccc",
+  padding: 10,
+  textAlign: "left",
+};
+
+const td = {
+  padding: 10,
+  borderBottom: "1px solid #eee",
+};
+
+const tdCenter = {
+  ...td,
+  textAlign: "center",
+};
+
+export const ViewSentModal = ({ couriers, onClose }) => {
+  const [sentOrders, setSentOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      setLoading(true);
+      try {
+        const data = await apiFetch("/Orders");
+        const deliverySent = data.filter(
+          (o) => o.orderType === "delivery" && o.orderStatus === "sent"
+        );
+        deliverySent.forEach((o) => {
+          try {
+            const addr = JSON.parse(o.address);
+            o._addressString = addr.address;
+          } catch {
+            o._addressString = "Unknown";
+          }
+        });
+        const sorted = deliverySent
+          .filter((o) => o.deliveryPositionInRoute != null)
+          .sort((a, b) => a.deliveryPositionInRoute - b.deliveryPositionInRoute);
+        setSentOrders(sorted);
+      } catch (err) {
+        console.error("Failed to fetch updated sent orders", err);
+        setSentOrders([]);
+      }
+      setLoading(false);
+    };
+    fetchOrders();
+  }, []);
+
+  const getTimeLeft = (order) => {
+    if (!order.courierDepartureTime || order.etaMinutesFromDeparture == null) {
+      return "Unknown";
+    }
+    const departure = new Date(order.courierDepartureTime);
+    const arrival = new Date(departure.getTime() + order.etaMinutesFromDeparture * 60000);
+    const diffMs = arrival - now;
+    if (diffMs <= 0) return "Arrived";
+    const mins = Math.floor(diffMs / 60000);
+    const secs = Math.floor((diffMs % 60000) / 1000);
+    return `${mins}m ${secs}s`;
+  };
+
+  const grouped = {};
+  sentOrders.forEach((o) => {
+    const name =
+      couriers.find((c) => c.PK === o.assignedCourierId)?.name ||
+      o.assignedCourierId ||
+      "Unknown Courier";
+    if (!grouped[name]) grouped[name] = [];
+    grouped[name].push(o);
+  });
+
+  return (
+    <div style={modalStyle}>
+      <h3>Sent Orders</h3>
+      {loading ? (
+        <p>Loading...</p>
+      ) : sentOrders.length === 0 ? (
+        <p>No sent orders found.</p>
+      ) : (
+        <div style={{ maxHeight: "60vh", overflowY: "auto", paddingRight: 10 }}>
+          {Object.entries(grouped).map(([courier, orders]) => (
+            <div key={courier} style={{ marginBottom: 16 }}>
+              <h5 style={{ margin: "10px 0" }}>{courier}</h5>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr>
+                    <th style={th}>#</th>
+                    <th style={th}>Order ID</th>
+                    <th style={th}>Address</th>
+                    <th style={th}>ETA</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((o) => (
+                    <tr key={o.PK}>
+                      <td style={tdCenter}>{o.deliveryPositionInRoute}</td>
+                      <td style={tdCenter}>{o.PK.slice(-4)}</td>
+                      <td style={td}>{o._addressString}</td>
+                      <td style={tdCenter}>{getTimeLeft(o)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+        </div>
+      )}
+      <button
+        onClick={onClose}
+        style={{ ...buttonStyle, backgroundColor: "#6c757d", marginTop: 20 }}
+      >
+        Close
+      </button>
+    </div>
+  );
 };
 
 export const AssignCourierModal = ({
@@ -96,41 +222,78 @@ AssignCourierModal.SelectCourier = ({ couriers, onCancel, onSelect }) => (
   </div>
 );
 
-export const ViewSentModal = ({ sentOrders, couriers, onClose }) => {
-  const groups = {};
-  sentOrders.forEach((order) => {
-    const name =
-      couriers.find((c) => c.PK === order.assignedCourierId)?.name ||
-      order.assignedCourierId ||
-      "Unknown";
-    if (!groups[name]) groups[name] = [];
-    groups[name].push(order);
-  });
+// export const ViewSentModal = ({ sentOrders, couriers, onClose }) => {
+//   const [sortedSentOrders, setSortedSentOrders] = useState([]);
+//   const [now, setNow] = useState(new Date());
 
-  return (
-    <div style={modalStyle}>
-      <h3>Sent Orders by Courier</h3>
-      {Object.entries(groups).map(([courier, orders]) => (
-        <div key={courier} style={{ marginBottom: 16 }}>
-          <h4>{courier}</h4>
-          <ul>
-            {orders.map((o) => (
-              <li key={o.PK}>
-                #{o.PK.slice(-4)} — {formatAddress(o.address)}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
-      <button
-        onClick={onClose}
-        style={{ ...buttonStyle, backgroundColor: "#6c757d", marginTop: 16 }}
-      >
-        Close
-      </button>
-    </div>
-  );
-};
+//   useEffect(() => {
+//     const interval = setInterval(() => setNow(new Date()), 1000);
+//     return () => clearInterval(interval);
+//   }, []);
+
+//   useEffect(() => {
+//     const fetchAndSort = async () => {
+//       try {
+//         const res = await fetch("/Orders");
+//         const data = await res.json();
+//         const updatedOrders = data.filter((o) => o.orderStatus === "sent");
+//         updatedOrders.sort((a, b) => (a.deliveryPositionInRoute || 0) - (b.deliveryPositionInRoute || 0));
+//         setSortedSentOrders(updatedOrders);
+//       } catch (e) {
+//         console.error("Failed to fetch updated sent orders", e);
+//         setSortedSentOrders(sentOrders);
+//       }
+//     };
+//     fetchAndSort();
+//   }, [sentOrders]);
+
+//   const getRemainingTime = (order) => {
+//     try {
+//       if (!order.courierDepartureTime || !order.etaMinutesFromDeparture) return "Unknown";
+//       const departure = new Date(order.courierDepartureTime);
+//       const arrival = new Date(departure.getTime() + order.etaMinutesFromDeparture * 60000);
+//       const diffMs = arrival - now;
+//       if (diffMs <= 0) return "Arrived";
+//       const mins = Math.floor(diffMs / 60000);
+//       const secs = Math.floor((diffMs % 60000) / 1000);
+//       return `${mins}:${secs.toString().padStart(2, "0")} min`;
+//     } catch {
+//       return "Error";
+//     }
+//   };
+
+//   const groups = {};
+//   sortedSentOrders.forEach((order) => {
+//     const name =
+//       couriers.find((c) => c.PK === order.assignedCourierId)?.name || order.assignedCourierId || "Unknown";
+//     if (!groups[name]) groups[name] = [];
+//     groups[name].push(order);
+//   });
+
+//   return (
+//     <div style={modalStyle}>
+//       <h3>Sent Orders by Courier</h3>
+//       {Object.entries(groups).map(([courier, orders]) => (
+//         <div key={courier} style={{ marginBottom: 16 }}>
+//           <h4>{courier}</h4>
+//           <ul>
+//             {orders.map((o) => (
+//               <li key={o.PK}>
+//                 #{o.PK.slice(-4)} — {formatAddress(o.address)} — ETA: {getRemainingTime(o)}
+//               </li>
+//             ))}
+//           </ul>
+//         </div>
+//       ))}
+//       <button
+//         onClick={onClose}
+//         style={{ ...buttonStyle, backgroundColor: "#6c757d", marginTop: 16 }}
+//       >
+//         Close
+//       </button>
+//     </div>
+//   );
+// };
 
 export const CouriersStatusModal = ({ couriers, onUpdateStatus, onClose }) => (
   <div style={modalStyle}>
