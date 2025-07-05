@@ -38,10 +38,10 @@ const TrackPage = () => {
       // delivery
       switch (status) {
         case "in-preparation":
-          return { percent: 30, color: "#e74c3c" };
-        case "on-the-way":
-          return { percent: 70, color: "#e67e22" };
-        case "delivered":
+          return { percent: 33, color: "#e74c3c" };
+        case "ready":
+          return { percent: 66, color: "#e67e22" };
+        case "sent":
         case "ready":
           return { percent: 100, color: "#2ecc71" };
         default:
