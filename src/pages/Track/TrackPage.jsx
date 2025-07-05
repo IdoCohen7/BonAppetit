@@ -9,6 +9,9 @@ const TrackPage = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const [now, setNow] = useState(new Date());
+  const [countdown, setCountdown] = useState("");
+
   useEffect(() => {
     if (!orderId) {
       setError("No order ID provided in URL.");
@@ -21,6 +24,32 @@ const TrackPage = () => {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [orderId]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (!order?.estimatedArrivalTime || order.orderStatus !== "sent") {
+      setCountdown("");
+      return;
+    }
+
+    const arrival = new Date(order.estimatedArrivalTime);
+    const diff = arrival - now;
+
+    if (diff <= 0) {
+      setCountdown("Arrived");
+    } else {
+      const mins = Math.floor(diff / 60000);
+      const hours = Math.floor(mins / 60);
+      const remainingMins = mins % 60;
+      setCountdown(`${hours}h ${remainingMins}m`);
+    }
+  }, [order, now]);
 
   const getProgress = (status, type) => {
     if (type === "pickup") {
@@ -35,7 +64,6 @@ const TrackPage = () => {
           return { percent: 0, color: "#ccc" };
       }
     } else {
-      // delivery
       switch (status) {
         case "in-preparation":
           return { percent: 33, color: "#e74c3c" };
@@ -77,7 +105,7 @@ const TrackPage = () => {
 
   if (error) return <div style={{ color: "red" }}>{error}</div>;
   if (!order) return <div>No order data available.</div>;
-  console.log("Order data:", order);
+
   const progress = getProgress(order.orderStatus, order.orderType);
 
   return (
@@ -115,11 +143,14 @@ const TrackPage = () => {
       {order.orderType === "delivery" && (
         <>
           <p>
-            <strong>Address:</strong> {JSON.parse(order.address).address}
+            <strong>Address:</strong>{" "}
+            {JSON.parse(order.address || "{}").address || "Unknown"}
           </p>
           <p>
             <strong>Estimated Arrival:</strong>{" "}
-            {formatDate(order.estimatedArrivalTime)}
+            {order.orderStatus !== "sent"
+              ? "Order has not been sent yet."
+              : countdown}
           </p>
         </>
       )}
