@@ -67,6 +67,14 @@ const OrderSummary = () => {
     };
   };
 
+  // Helper to format ETA (assumes eta is ISO string or Date)
+  const formatEta = (etaValue) => {
+    if (!etaValue) return "N/A";
+    const date = new Date(etaValue);
+    if (isNaN(date.getTime())) return etaValue; // fallback if not a date
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
   return (
     <div className="order-summary-page">
       <h2>Order Summary</h2>
@@ -92,7 +100,7 @@ const OrderSummary = () => {
             <strong>Address:</strong> {address}
           </p>
           <p>
-            <strong>Estimated Arrival:</strong> {eta}
+            <strong>Estimated Arrival:</strong> {formatEta(eta)}
           </p>
           <p>Please pay the courier in cash.</p>
         </div>

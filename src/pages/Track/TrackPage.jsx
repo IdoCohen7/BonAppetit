@@ -22,27 +22,44 @@ const TrackPage = () => {
       .finally(() => setLoading(false));
   }, [orderId]);
 
-  const getProgress = (status) => {
-    switch (status) {
-      case "in-preparation":
-        return { percent: 30, color: "#e74c3c" };
-      case "on-the-way":
-        return { percent: 70, color: "#e67e22" };
-      case "delivered":
-      case "ready":
-        return { percent: 100, color: "#2ecc71" };
-      default:
-        return { percent: 0, color: "#ccc" };
+  const getProgress = (status, type) => {
+    if (type === "pickup") {
+      switch (status) {
+        case "in-preparation":
+          return { percent: 30, color: "#e74c3c" };
+        case "ready":
+          return { percent: 70, color: "#f39c12" };
+        case "collected":
+          return { percent: 100, color: "#2ecc71" };
+        default:
+          return { percent: 0, color: "#ccc" };
+      }
+    } else {
+      // delivery
+      switch (status) {
+        case "in-preparation":
+          return { percent: 30, color: "#e74c3c" };
+        case "on-the-way":
+          return { percent: 70, color: "#e67e22" };
+        case "delivered":
+        case "ready":
+          return { percent: 100, color: "#2ecc71" };
+        default:
+          return { percent: 0, color: "#ccc" };
+      }
     }
   };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "-";
     const date = new Date(dateStr);
-    return `${date.toLocaleTimeString([], {
+    return `${date.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
-    })} | ${date.toLocaleDateString()}`;
+      timeZone: "Asia/Jerusalem",
+    })} | ${date.toLocaleDateString("en-IL", {
+      timeZone: "Asia/Jerusalem",
+    })}`;
   };
 
   if (loading) {
@@ -60,8 +77,8 @@ const TrackPage = () => {
 
   if (error) return <div style={{ color: "red" }}>{error}</div>;
   if (!order) return <div>No order data available.</div>;
-
-  const progress = getProgress(order.orderStatus);
+  console.log("Order data:", order);
+  const progress = getProgress(order.orderStatus, order.orderType);
 
   return (
     <div className="track-container">

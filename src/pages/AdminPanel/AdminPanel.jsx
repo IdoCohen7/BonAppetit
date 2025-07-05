@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import NavBar from "./components/NavBar";
 import DeliveryOrders from "./components/DeliveryOrders";
 import PickupOrders from "./components/PickupOrders";
@@ -7,12 +7,15 @@ import Couriers from "./components/Couriers";
 import History from "./components/History";
 import { apiFetch } from "../../utils/api";
 import { WEBSOCKET_URL } from "../../config/websocketConfig";
+import happyBellSound from "../../assets/sounds/happybell.wav";
 
 const AdminPanel = () => {
   const [activeSection, setActiveSection] = useState("delivery");
   const [orders, setOrders] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
   const [couriers, setCouriers] = useState([]);
+
+  const bellAudioRef = useRef(new Audio(happyBellSound));
 
   const fetchOrders = async () => {
     try {
@@ -62,7 +65,10 @@ const AdminPanel = () => {
           // check if the order already exists
           const exists = prevOrders.some((o) => o.PK === newOrder.PK);
           if (exists) return prevOrders;
-
+          // Play happy bell sound
+          bellAudioRef.current
+            .play()
+            .catch((err) => console.warn("Audio play error:", err));
           return [...prevOrders, newOrder];
         });
       } catch (err) {

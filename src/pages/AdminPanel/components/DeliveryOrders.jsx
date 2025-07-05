@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { apiFetch } from "../../../utils/api";
 import OrderCard from "./OrderCard";
-import {
-  sortOrders,
-  getCourierName,
-  formatAddress,
-  deliveryStatusColor,
-  getCountdown,
-  formatDateIL,
-} from "./helpers";
+import { sortOrders, getCourierName } from "./helpers";
 import {
   AssignCourierModal,
   ViewSentModal,
@@ -187,6 +180,8 @@ const DeliveryOrders = ({ orders }) => {
       <h2 style={{ marginBottom: 20 }}>Delivery Orders</h2>
       {loading ? (
         <Spinner animation="border" />
+      ) : deliveryOrders.length === 0 ? (
+        <p>No delivery orders available.</p>
       ) : (
         sortOrders(deliveryOrders, now).map((order) => (
           <OrderCard
