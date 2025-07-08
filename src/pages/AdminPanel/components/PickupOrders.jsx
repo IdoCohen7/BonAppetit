@@ -14,7 +14,13 @@ const PickupOrders = ({ orders }) => {
   }, []);
 
   useEffect(() => {
-    if (!orders?.length || !menuItems.length) return;
+    if (!menuItems.length) return;
+
+    if (!orders?.length) {
+      setEnrichedOrders([]);
+      setLoading(false);
+      return;
+    }
 
     const itemMap = {};
     menuItems.forEach((item) => {

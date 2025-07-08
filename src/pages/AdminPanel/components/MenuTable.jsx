@@ -19,36 +19,38 @@ const MenuTable = ({ items: initialItems }) => {
     };
 
     return (
-      <div className="modal-overlay">
-        <div className="modal">
-          <h3>Edit Menu Item</h3>
-          <label>
-            Name:
-            <input name="name" value={form.name} onChange={handleChange} />
-          </label>
-          <label>
-            Price:
-            <input
-              name="price"
-              type="number"
-              value={form.price}
-              onChange={handleChange}
-            />
-          </label>
-          <label>
-            Description:
-            <textarea
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-            />
-          </label>
-          <div className="modal-actions">
-            <button onClick={() => onSave(form)}>Save</button>
-            <button onClick={onClose}>Cancel</button>
+      <>
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Edit Menu Item</h3>
+            <label>
+              Name:
+              <input name="name" value={form.name} onChange={handleChange} />
+            </label>
+            <label>
+              Price:
+              <input
+                name="price"
+                type="number"
+                value={form.price}
+                onChange={handleChange}
+              />
+            </label>
+            <label>
+              Description:
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+              />
+            </label>
+            <div className="modal-actions">
+              <button onClick={() => onSave(form)}>Save</button>
+              <button onClick={onClose}>Cancel</button>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   };
 
@@ -93,6 +95,7 @@ const MenuTable = ({ items: initialItems }) => {
   };
 
   const handleEdit = (item) => {
+    console.log("Editing item:", item);
     setEditItem(item);
   };
 
