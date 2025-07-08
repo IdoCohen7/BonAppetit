@@ -13,10 +13,12 @@ const NavBar = ({ onSectionChange, onLogout }) => {
           Delivery Orders
         </button>
         <button onClick={() => onSectionChange("pickup")}>Pickup Orders</button>
+        <button onClick={() => onSectionChange("history")}>Shift History</button>
+        <button onClick={() => onSectionChange("menu")}>Edit Menu</button>
       </div>
 
       <div className="nav-right">
-        <div className="dropdown">
+        {/* <div className="dropdown">
           <button>⋮ More Menu</button>
           <div className="dropdown-content">
             <button onClick={() => onSectionChange("menu")}>Edit Menu</button>
@@ -27,7 +29,7 @@ const NavBar = ({ onSectionChange, onLogout }) => {
               Shift History
             </button>
           </div>
-        </div>
+        </div> */}
         <div className="logout" onClick={onLogout}>
           🔒 Logout
         </div>
