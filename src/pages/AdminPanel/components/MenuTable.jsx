@@ -4,62 +4,18 @@ import { apiFetch } from "../../../utils/api";
 const MenuTable = ({ items: initialItems }) => {
   const [items, setItems] = useState(initialItems);
   const [isLoading, setIsLoading] = useState(true);
-  const [editItem, setEditItem] = useState(null);
-
-  const EditModal = ({ item, onSave, onClose }) => {
-    const [form, setForm] = useState({
-      name: item.name,
-      price: item.price,
-      description: item.description,
-    });
-
-    const handleChange = (e) => {
-      const { name, value } = e.target;
-      setForm({ ...form, [name]: value });
-    };
-
-    return (
-      <>
-        <div className="modal-overlay">
-          <div className="modal">
-            <h3>Edit Menu Item</h3>
-            <label>
-              Name:
-              <input name="name" value={form.name} onChange={handleChange} />
-            </label>
-            <label>
-              Price:
-              <input
-                name="price"
-                type="number"
-                value={form.price}
-                onChange={handleChange}
-              />
-            </label>
-            <label>
-              Description:
-              <textarea
-                name="description"
-                value={form.description}
-                onChange={handleChange}
-              />
-            </label>
-            <div className="modal-actions">
-              <button onClick={() => onSave(form)}>Save</button>
-              <button onClick={onClose}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  };
+  const [editItem, setEditItem] = useState(null); // פריט העריכה הנוכחי
+  const [formData, setFormData] = useState({
+    name: "",
+    price: "",
+    description: "",
+  });
 
   useEffect(() => {
     setIsLoading(true);
     apiFetch("/MenuItems")
       .then((data) => {
-        const items = data;
-        setItems(items);
+        setItems(data);
       })
       .catch((err) => {
         console.error("Failed to load menu items:", err);
@@ -67,6 +23,45 @@ const MenuTable = ({ items: initialItems }) => {
       .finally(() => setIsLoading(false));
   }, []);
 
+  // טיפול בשדות הקלט
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  // טיפול בלחיצה על כפתור EDIT
+  const handleEdit = (item) => {
+    setEditItem(item.PK); // מגדיר את ה-PK של המנה שהולכים לערוך
+    setFormData({
+      name: item.name,
+      price: item.price,
+      description: item.description,
+    });
+  };
+
+  // טיפול בלחיצה על SAVE
+  const handleSave = async () => {
+    try {
+      await apiFetch("/MenuItems", {
+        method: "PUT",
+        body: JSON.stringify({
+          itemId: editItem,
+          ...formData,
+        }),
+      });
+
+      const updatedItems = items.map((item) =>
+        item.PK === editItem ? { ...item, ...formData } : item
+      );
+      setItems(updatedItems);
+      setEditItem(null); // סגירת עריכת המנה
+    } catch (err) {
+      alert("Failed to save changes");
+      console.error(err);
+    }
+  };
+
+  // טיפול בהפיכת המנה לזמינה / לא זמינה
   const handleToggle = async (PK) => {
     const index = items.findIndex((item) => item.PK === PK);
     if (index === -1) return;
@@ -91,32 +86,6 @@ const MenuTable = ({ items: initialItems }) => {
     } catch (error) {
       alert("Failed to update item status.");
       console.error(error);
-    }
-  };
-
-  const handleEdit = (item) => {
-    console.log("Editing item:", item);
-    setEditItem(item);
-  };
-
-  const handleSave = async (formData) => {
-    try {
-      await apiFetch("/MenuItems", {
-        method: "PUT",
-        body: JSON.stringify({
-          itemId: editItem.PK,
-          ...formData,
-        }),
-      });
-
-      const updatedItems = items.map((i) =>
-        i.PK === editItem.PK ? { ...i, ...formData } : i
-      );
-      setItems(updatedItems);
-      setEditItem(null);
-    } catch (err) {
-      alert("Failed to save changes");
-      console.error(err);
     }
   };
 
@@ -145,7 +114,7 @@ const MenuTable = ({ items: initialItems }) => {
               </tr>
             ) : (
               items.map((item) => (
-                <tr key={`${item.PK}`}>
+                <tr key={item.PK}>
                   <td>
                     <img
                       src={item.img}
@@ -157,9 +126,41 @@ const MenuTable = ({ items: initialItems }) => {
                       }}
                     />
                   </td>
-                  <td>{item.name}</td>
-                  <td>{item.description}</td>
-                  <td>₪{item.price}</td>
+                  <td>
+                    {editItem === item.PK ? (
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                      />
+                    ) : (
+                      item.name
+                    )}
+                  </td>
+                  <td>
+                    {editItem === item.PK ? (
+                      <textarea
+                        name="description"
+                        value={formData.description}
+                        onChange={handleChange}
+                      />
+                    ) : (
+                      item.description
+                    )}
+                  </td>
+                  <td>
+                    {editItem === item.PK ? (
+                      <input
+                        type="number"
+                        name="price"
+                        value={formData.price}
+                        onChange={handleChange}
+                      />
+                    ) : (
+                      `₪${item.price}`
+                    )}
+                  </td>
                   <td>
                     <span
                       onClick={() => handleToggle(item.PK)}
@@ -173,22 +174,17 @@ const MenuTable = ({ items: initialItems }) => {
                     </span>
                   </td>
                   <td>
-                    <button onClick={() => handleEdit(item)}>Edit</button>
+                    {editItem === item.PK ? (
+                      <button onClick={handleSave}>Save</button>
+                    ) : (
+                      <button onClick={() => handleEdit(item)}>Edit</button>
+                    )}
                   </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
-      )}
-
-      {/* Modal מופיע רק אם יש פריט לעריכה */}
-      {editItem && (
-        <EditModal
-          item={editItem}
-          onSave={handleSave}
-          onClose={() => setEditItem(null)}
-        />
       )}
     </section>
   );
