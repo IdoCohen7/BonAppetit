@@ -296,35 +296,57 @@ AssignCourierModal.SelectCourier = ({ couriers, onCancel, onSelect }) => (
 // };
 
 export const CouriersStatusModal = ({ couriers, onUpdateStatus, onClose }) => (
-  <div style={modalStyle}>
-    <h3>Courier Status</h3>
-    {couriers.map((c) => (
-      <div
-        key={c.PK}
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 12,
-        }}
-      >
-        <span>{c.name}</span>
-        <button
-          onClick={() => onUpdateStatus(c.PK, !c.available)}
+  <div style={overlayStyle}>
+    <div style={modalStyle}>
+      <h3 style={{ marginBottom: 20 }}>Courier Status</h3>
+      {couriers.map((c) => (
+        <div
+          key={c.PK}
           style={{
-            ...buttonStyle,
-            backgroundColor: c.available ? "#28a745" : "#dc3545",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 12,
+            borderBottom: "1px solid #eee",
+            paddingBottom: 8,
           }}
         >
-          {c.available ? "Available" : "Unavailable"}
+          <div>
+            <div style={{ fontWeight: "bold" }}>{c.name}</div>
+            <div style={{ fontSize: "0.9em", color: "#666" }}>{c.phone}</div>
+          </div>
+          <button
+            onClick={() => onUpdateStatus(c.PK, !c.available)}
+            style={{
+              ...buttonStyle,
+              backgroundColor: c.available ? "#28a745" : "#dc3545",
+            }}
+          >
+            {c.available ? "Available" : "Unavailable"}
+          </button>
+        </div>
+      ))}
+      <div style={{ textAlign: "right", marginTop: 24 }}>
+        <button
+          onClick={onClose}
+          style={{ ...buttonStyle, backgroundColor: "#6c757d" }}
+        >
+          Close
         </button>
       </div>
-    ))}
-    <button
-      onClick={onClose}
-      style={{ ...buttonStyle, backgroundColor: "#6c757d", marginTop: 16 }}
-    >
-      Close
-    </button>
+    </div>
   </div>
 );
+
+const overlayStyle = {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  width: "100vw",
+  height: "100vh",
+  backgroundColor: "rgba(0, 0, 0, 0.4)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 1000,
+};
