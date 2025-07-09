@@ -8,6 +8,8 @@ import {
   loadFromSessionStorage,
 } from "../Helpers/storageUtils";
 import { apiFetch } from "../../utils/api";
+import TopBar from "../Helpers/TopBar"; // ✅ הוספת TopBar
+
 
 const OrderMethod = () => {
   const navigate = useNavigate();
@@ -138,6 +140,7 @@ const OrderMethod = () => {
 
   return (
     <div className="order-page">
+      <TopBar />
       <div className="order-container">
         <img src={Logo} alt="Restaurant Logo" className="logo-img" />
         <h2 className="order-title">How would you like to place your order?</h2>

@@ -1,19 +1,35 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { apiFetch } from "../../utils/api";
 import { loadFromSessionStorage } from "../Helpers/storageUtils";
+import { useState } from "react";
+import TopBar from "../Helpers/TopBar"; // ✅ הוספת TopBar
 
 const OrderSummary = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { cart = [], method, address, eta } = location.state || {};
+  const [hoveredBtn, setHoveredBtn] = useState(null);
 
   const total = cart.reduce((sum, item) => {
     return sum + (item.price || 0) * item.quantity;
   }, 0);
 
+  const isLoggedIn = !!sessionStorage.getItem("id_token");
+
   const handleConfirm = async () => {
+    if (!isLoggedIn) {
+      alert("You must be logged in to place an order.");
+      return;
+    }
+
+    const idToken = sessionStorage.getItem("id_token");
+    if (!idToken) {
+      alert("Login is required to place an order.");
+      return;
+    }
+
     try {
-      const result = await sendOrder();
+      const result = await sendOrder(idToken);
       console.log("Server response:", result);
       alert("Your order has been sent to the restaurant!");
       navigate(`/track?id=${result.orderId}`);
@@ -22,33 +38,36 @@ const OrderSummary = () => {
     }
   };
 
-  const sendOrder = async () => {
-    console.log(loadFromSessionStorage("bonapetit_cart"));
-
+  const sendOrder = async (idToken) => {
     const orderData = buildOrderData();
 
     if (!orderData.items || orderData.items.length === 0) {
       const message = "Cannot send order: cart is empty";
       console.error(message);
-      throw new Error(message); // שינוי: לא Promise.reject אלא throw
+      throw new Error(message);
     }
 
     try {
-      // Check restaurant status before sending the order
       const response = await apiFetch("/RestaurantStatus");
       if (!response.isOpen) {
         alert("The restaurant is currently closed. Please try again later.");
         navigate("/");
-      } else {
-        const result = await apiFetch("/Orders", {
-          method: "POST",
-          body: JSON.stringify(orderData),
-        });
-        return result; // שינוי: אין צורך ב-Promise.resolve
+        return;
       }
+
+      const result = await apiFetch("/Orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      return result;
     } catch (err) {
       console.error("API error:", err);
-      throw err; // שינוי: לא Promise.reject אלא throw
+      throw err;
     } finally {
       sessionStorage.removeItem("orderItems");
     }
@@ -57,7 +76,6 @@ const OrderSummary = () => {
   const buildOrderData = () => {
     return {
       items: loadFromSessionStorage("bonapetit_cart") || [],
-      userId: loadFromSessionStorage("userId") || "unknown",
       orderType: loadFromSessionStorage("orderType") || "pickup",
       orderStatus: loadFromSessionStorage("orderStatus") || "pending",
       address: loadFromSessionStorage("address") || null,
@@ -67,16 +85,17 @@ const OrderSummary = () => {
     };
   };
 
-  // Helper to format ETA (assumes eta is ISO string or Date)
   const formatEta = (etaValue) => {
     if (!etaValue) return "N/A";
     const date = new Date(etaValue);
-    if (isNaN(date.getTime())) return etaValue; // fallback if not a date
+    if (isNaN(date.getTime())) return etaValue;
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
   return (
     <div className="order-summary-page">
+      <TopBar /> {/* ✅ נוספה */}
+      
       <h2>Order Summary</h2>
 
       <ul className="order-list">

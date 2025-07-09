@@ -1,10 +1,12 @@
+// src/pages/Delivery/Delivery.jsx
+
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import MenuSection from "./components/MenuSection";
 import Cart from "./components/Cart";
 import FloatingCartButton from "./components/FloatingCartButton";
-import Logo from "../../assets/images/Logo.png";
+import TopBar from "../Helpers/TopBar"; // ✅ קומפוננטת סרגל עליון חדשה
 import { apiFetch } from "../../utils/api";
 import { saveToSessionStorage } from "../Helpers/storageUtils";
 
@@ -19,8 +21,7 @@ const Delivery = () => {
   useEffect(() => {
     apiFetch("/MenuItems")
       .then((data) => {
-        const items = data;
-        const availableItems = items.filter((item) => item.available);
+        const availableItems = data.filter((item) => item.available);
         setMenuItems(availableItems);
         setCategories([...new Set(availableItems.map((i) => i.category))]);
       })
@@ -41,24 +42,7 @@ const Delivery = () => {
 
   return (
     <div className="delivery-page">
-      <header className="header">
-        <div className="container header-flex">
-          <a href="/" className="logo">
-            <img
-              src={Logo}
-              alt="BonApetit Logo"
-              className="logo-img small-logo"
-            />
-          </a>
-          <nav className="top-nav">
-            <ul>
-              <li>
-                <a href="/">Return</a>
-              </li>
-            </ul>
-          </nav>
-        </div>
-      </header>
+      <TopBar />
 
       <aside className="side-nav" id="sideNav">
         <Sidebar categories={categories} />
