@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { cognitoConfig } from "../config/apiConfig";
-import { getPostLoginRedirect } from "../pages/Helpers/authRedirect" // ⬅️ שימוש בפונקציה חיצונית
+import { getPostLoginRedirect } from "../pages/Helpers/authRedirect";
+import Spinner from "react-bootstrap/Spinner";
+import { jwtDecode } from "jwt-decode";
 
 const Callback = () => {
   const navigate = useNavigate();
@@ -48,7 +50,15 @@ const Callback = () => {
           sessionStorage.setItem("access_token", data.access_token);
           sessionStorage.setItem("refresh_token", data.refresh_token);
 
-          const redirectPath = getPostLoginRedirect(); // ⬅️ שימוש בפונקציה חיצונית
+          const decoded = jwtDecode(data.id_token);
+          const groups = decoded["cognito:groups"] || [];
+
+          let redirectPath = getPostLoginRedirect();
+
+          if (groups.includes("admin")) {
+            redirectPath = "/admin";
+          }
+
           navigate(redirectPath);
         } else {
           console.error("❌ Token fetch failed", data);
@@ -62,8 +72,8 @@ const Callback = () => {
   }, [navigate]);
 
   return (
-    <div style={{ padding: "2rem", textAlign: "center" }}>
-      <h3>Logging you in...</h3>
+    <div className="callback-page">
+      <Spinner animation="grow"></Spinner>
     </div>
   );
 };

@@ -988,3 +988,54 @@ ul li {
   transition: width 0.6s ease;
 }
 
+.callback-page {
+  height: 100%;
+  background: linear-gradient(to right, #fdf9f3, #f6f2ec);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.order-card {
+  border: 1px solid #ddd;
+  padding: 16px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  background: #fafafa;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.order-timer {
+  font-weight: bold;
+  margin: 8px 0;
+}
+
+.timer-fresh {
+  color: green;
+}
+
+.timer-warn {
+  color: orange;
+}
+
+.timer-old {
+  color: red;
+}
+
+.mark-ready-btn,
+.mark-complete-btn {
+  padding: 8px 12px;
+  font-size: 14px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.mark-ready-btn {
+  background-color: #ffe58f;
+}
+
+.mark-complete-btn {
+  background-color: #b7eb8f;
+}

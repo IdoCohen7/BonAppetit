@@ -1,26 +1,36 @@
 import React, { useEffect, useState } from "react";
 import { apiFetch } from "../../../utils/api";
 import Spinner from "react-bootstrap/Spinner";
+import OrderCard from "./OrderCard";
+import { sortOrders } from "./helpers";
 
 const PickupOrders = ({ orders }) => {
   const [menuItems, setMenuItems] = useState([]);
-  const [enrichedOrders, setEnrichedOrders] = useState([]);
+  const [localOrders, setLocalOrders] = useState([]);
+  const [statusChanges, setStatusChanges] = useState({});
   const [loading, setLoading] = useState(true);
+  const [now, setNow] = useState(new Date());
 
   useEffect(() => {
-    apiFetch("/MenuItems")
-      .then(setMenuItems)
-      .catch((err) => console.error("Failed to fetch menu items", err));
+    const interval = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    if (!menuItems.length) return;
+    const fetchMenuItems = async () => {
+      try {
+        const data = await apiFetch("/MenuItems");
+        setMenuItems(data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Failed to fetch menu items", err);
+      }
+    };
+    fetchMenuItems();
+  }, []);
 
-    if (!orders?.length) {
-      setEnrichedOrders([]);
-      setLoading(false);
-      return;
-    }
+  useEffect(() => {
+    if (!orders?.length || !menuItems.length) return;
 
     const itemMap = {};
     menuItems.forEach((item) => {
@@ -45,83 +55,52 @@ const PickupOrders = ({ orders }) => {
       })),
     }));
 
-    setEnrichedOrders(enriched);
-    setLoading(false);
+    setLocalOrders(enriched);
   }, [orders, menuItems]);
 
-  const pickupOrders = enrichedOrders.filter(
-    (order) => order.orderType === "pickup"
-  );
+  const pickupOrders = localOrders.filter((o) => o.orderType === "pickup");
 
-  const updateOrderStatus = async (orderId) => {
+  const handleStatusChange = (orderId, newStatus) => {
+    setStatusChanges((prev) => ({ ...prev, [orderId]: newStatus }));
+  };
+
+  const confirmStatusChange = async (orderId) => {
+    const newStatus = statusChanges[orderId];
+    const body = { orders: [{ orderId, orderStatus: newStatus }] };
     try {
-      await apiFetch(`/Orders/${orderId}`, {
-        method: "PATCH",
+      await apiFetch("/Orders/BatchUpdate", {
+        method: "PUT",
+        body: JSON.stringify(body),
       });
-
-      // עדכון מקומי של הסטטוס
-      setEnrichedOrders((prev) =>
+      setLocalOrders((prev) =>
         prev.map((o) =>
-          o.PK === orderId
-            ? {
-                ...o,
-                orderStatus:
-                  o.orderStatus === "pending"
-                    ? "ready"
-                    : o.orderStatus === "ready"
-                    ? "collected"
-                    : o.orderStatus,
-              }
-            : o
+          o.PK === orderId ? { ...o, orderStatus: newStatus } : o
         )
       );
     } catch (err) {
       console.error("Failed to update order status", err);
-      alert("Failed to update status");
     }
   };
 
   return (
-    <section className="section">
-      <h2>Pickup Orders</h2>
-      <div>
-        {loading ? (
-          <Spinner></Spinner>
-        ) : pickupOrders.length === 0 ? (
-          <p>No pickup orders available.</p>
-        ) : (
-          pickupOrders.map((order) => {
-            const itemsStr =
-              order.items?.map((i) => `${i.name} x${i.quantity}`).join(", ") ||
-              "";
-
-            return (
-              <div key={order.PK} className="order-card">
-                <h3>Order #{order.PK}</h3>
-                <p>Items: {itemsStr}</p>
-                <p>Status: {order.orderStatus}</p>
-
-                {order.orderStatus === "collected" ? (
-                  <p>✅ Collected</p>
-                ) : (
-                  <button
-                    onClick={() => updateOrderStatus(order.PK)}
-                    className={
-                      order.orderStatus === "ready"
-                        ? "mark-complete-btn"
-                        : "mark-ready-btn"
-                    }
-                  >
-                    {order.orderStatus === "ready"
-                      ? "✔️ Mark as Collected"
-                      : "🟡 Mark as Ready"}
-                  </button>
-                )}
-              </div>
-            );
-          })
-        )}
-      </div>
+    <section style={{ padding: "10px 18px" }}>
+      <h2 style={{ marginBottom: 20 }}>Pickup Orders</h2>
+      {loading ? (
+        <Spinner animation="border" />
+      ) : pickupOrders.length === 0 ? (
+        <p>No pickup orders available.</p>
+      ) : (
+        sortOrders(pickupOrders, now).map((order) => (
+          <OrderCard
+            key={order.PK}
+            order={order}
+            now={now}
+            onStatusChange={handleStatusChange}
+            onConfirmStatus={confirmStatusChange}
+            newStatus={statusChanges[order.PK]}
+          />
+        ))
+      )}
     </section>
   );
 };

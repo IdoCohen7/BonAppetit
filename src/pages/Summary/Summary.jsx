@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { apiFetch } from "../../utils/api";
 import { loadFromSessionStorage } from "../Helpers/storageUtils";
 import { useState } from "react";
-import TopBar from "../Helpers/TopBar"; // ✅ הוספת TopBar
+import TopBar from "../Helpers/TopBar";
 
 const OrderSummary = () => {
   const location = useLocation();
@@ -92,10 +92,26 @@ const OrderSummary = () => {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
+  const getFormattedAddress = () => {
+    // אם זה אובייקט עם שדה 'address'
+    if (typeof address === "object" && address?.address) {
+      return address.address;
+    }
+
+    // אם זה פשוט מחרוזת (fallback)
+    if (typeof address === "string") {
+      return address;
+    }
+
+    return "N/A";
+  };
+
+  const addressObj = JSON.parse(loadFromSessionStorage("address"));
+
   return (
     <div className="order-summary-page">
-      <TopBar /> {/* ✅ נוספה */}
-      
+      <TopBar />
+
       <h2>Order Summary</h2>
 
       <ul className="order-list">
@@ -116,7 +132,7 @@ const OrderSummary = () => {
       {method === "delivery" ? (
         <div className="delivery-details">
           <p>
-            <strong>Address:</strong> {address}
+            <strong>Address:</strong> {addressObj.address}
           </p>
           <p>
             <strong>Estimated Arrival:</strong> {formatEta(eta)}

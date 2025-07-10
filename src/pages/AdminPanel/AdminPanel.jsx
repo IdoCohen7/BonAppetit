@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
-
+import { handleLogout } from "../Helpers/authRedirect";
 import NavBar from "./components/NavBar";
 import DeliveryOrders from "./components/DeliveryOrders";
 import PickupOrders from "./components/PickupOrders";
@@ -15,7 +15,6 @@ import happyBellSound from "../../assets/sounds/happybell.wav";
 
 import { cognitoConfig } from "../../config/apiConfig"; // ✅ הגדרות Cognito
 
-
 const AdminPanel = () => {
   const [activeSection, setActiveSection] = useState("delivery");
   const [orders, setOrders] = useState([]);
@@ -26,16 +25,18 @@ const AdminPanel = () => {
   const bellAudioRef = useRef(new Audio(happyBellSound));
   const navigate = useNavigate();
 
-const handleLogin = () => {
-  // שמירה של הנתיב הנוכחי כדי שנוכל לחזור אליו אחרי login
-  sessionStorage.setItem("post_login_redirect", window.location.pathname);
+  const handleLogin = () => {
+    // שמירה של הנתיב הנוכחי כדי שנוכל לחזור אליו אחרי login
+    sessionStorage.setItem("post_login_redirect", window.location.pathname);
 
-  const { domain, clientId, redirectUri, responseType, scopes } = cognitoConfig;
-  const scopeStr = scopes.join(" ");
-  const loginUrl = `https://${domain}/login?response_type=${responseType}&client_id=${clientId}&redirect_uri=${redirectUri}&scope=${encodeURIComponent(scopeStr)}`;
-  window.location.href = loginUrl;
-};
-
+    const { domain, clientId, redirectUri, responseType, scopes } =
+      cognitoConfig;
+    const scopeStr = scopes.join(" ");
+    const loginUrl = `https://${domain}/login?response_type=${responseType}&client_id=${clientId}&redirect_uri=${redirectUri}&scope=${encodeURIComponent(
+      scopeStr
+    )}`;
+    window.location.href = loginUrl;
+  };
 
   useEffect(() => {
     const token = sessionStorage.getItem("id_token");
@@ -73,7 +74,9 @@ const handleLogin = () => {
         const newOrder = JSON.parse(event.data).order;
         setOrders((prevOrders) => {
           if (prevOrders.some((o) => o.PK === newOrder.PK)) return prevOrders;
-          bellAudioRef.current.play().catch((err) => console.warn("Audio error:", err));
+          bellAudioRef.current
+            .play()
+            .catch((err) => console.warn("Audio error:", err));
           return [...prevOrders, newOrder];
         });
       } catch (err) {
@@ -110,17 +113,25 @@ const handleLogin = () => {
     }
   };
 
-  const deliveryOrders = orders.filter((order) => order.orderType === "delivery");
+  const deliveryOrders = orders.filter(
+    (order) => order.orderType === "delivery"
+  );
   const pickupOrders = orders.filter((order) => order.orderType === "pickup");
 
   const renderSection = () => {
     switch (activeSection) {
-      case "delivery": return <DeliveryOrders orders={deliveryOrders} couriers={couriers} />;
-      case "pickup": return <PickupOrders orders={pickupOrders} />;
-      case "menu": return <MenuTable items={menuItems} />;
-      case "couriers": return <Couriers couriers={couriers} />;
-      case "history": return <History />;
-      default: return null;
+      case "delivery":
+        return <DeliveryOrders orders={deliveryOrders} couriers={couriers} />;
+      case "pickup":
+        return <PickupOrders orders={pickupOrders} />;
+      case "menu":
+        return <MenuTable items={menuItems} />;
+      case "couriers":
+        return <Couriers couriers={couriers} />;
+      case "history":
+        return <History />;
+      default:
+        return null;
     }
   };
 
@@ -128,7 +139,7 @@ const handleLogin = () => {
 
   return (
     <div>
-      <NavBar onSectionChange={setActiveSection} onLogout={() => alert("Logged out")} />
+      <NavBar onSectionChange={setActiveSection} onLogout={handleLogout} />
       <main>{renderSection()}</main>
     </div>
   );
