@@ -38,5 +38,5 @@ export const handleLogout = () => {
   sessionStorage.removeItem("chosenTime");
   sessionStorage.removeItem("orderEta");
   sessionStorage.removeItem("assignedCourierId");
-  window.location.href = "/";
+  window.location.href = "http://bonapetit-website.s3-website-us-east-1.amazonaws.com/";
 };

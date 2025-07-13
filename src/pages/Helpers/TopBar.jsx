@@ -17,7 +17,9 @@ const TopBar = () => {
     sessionStorage.clear();
     localStorage.removeItem("bonapetit_cart");
     setLoggedIn(false);
-    navigate("/");
+    //navigate("/");
+    window.location.href = "http://bonapetit-website.s3-website-us-east-1.amazonaws.com/";
+
   };
 
   const getButtonStyle = (type) => ({

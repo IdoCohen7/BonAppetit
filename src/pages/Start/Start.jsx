@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Logo from "../../assets/images/Logo.png";
 import AddressInput from "./components/AdressInput";
 import TimePickerWrapper from "./components/TimePicker";
+import { jwtDecode } from "jwt-decode";
 import {
   saveToSessionStorage,
   loadFromSessionStorage,
@@ -22,10 +23,24 @@ const OrderMethod = () => {
     setAddressData(data);
   };
 
+  //
   useEffect(() => {
-    // Check restaurant status when the component mounts
-    // checkRestaurantStatus();
-  }, []);
+  const token = sessionStorage.getItem("id_token");
+
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      const groups = decoded["cognito:groups"] || [];
+
+      if (groups.includes("admin")) {
+        navigate("/admin");
+      }
+    } catch (e) {
+      console.error("Error decoding token", e);
+    }
+  }
+}, []);
+//
 
   const chooseOption = (option) => {
     if (option === "pickup") {

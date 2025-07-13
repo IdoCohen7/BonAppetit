@@ -6,6 +6,7 @@ import {
   Routes,
   Route,
   Navigate,
+  HashRouter
 } from "react-router-dom";
 
 import Start from "./pages/Start/Start.jsx";
@@ -22,7 +23,8 @@ import "./styles/style.css";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <BrowserRouter>
+    <HashRouter>
+    {/* <BrowserRouter> */}
       <TokenHandler>
         <Routes>
           <Route path="/" element={<Start />} />
@@ -34,6 +36,7 @@ createRoot(document.getElementById("root")).render(
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </TokenHandler>
-    </BrowserRouter>
+      {/* </BrowserRouter> */}
+    </HashRouter>
   </StrictMode>
 );

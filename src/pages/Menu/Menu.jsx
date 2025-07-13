@@ -31,8 +31,10 @@ const Delivery = () => {
   }, []);
 
   useEffect(() => {
-    const saved = localStorage.getItem("bonapetit_cart");
-    if (saved) setCart(JSON.parse(saved));
+    // const saved = localStorage.getItem("bonapetit_cart");
+    // if (saved) setCart(JSON.parse(saved));
+    sessionStorage.removeItem("bonapetit_cart");
+    
   }, []);
 
   useEffect(() => {

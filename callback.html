@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Authenticating...</title>
+  <script>
+    window.addEventListener("DOMContentLoaded", async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get("code");
+
+      if (!code) {
+        document.body.innerHTML = "<h2>❌ Missing authorization code.</h2>";
+        return;
+      }
+
+      // CONFIG (שנה את הערכים שלך כאן אם צריך)
+      const domain = "us-east-1ali2rxa83.auth.us-east-1.amazoncognito.com";
+      const clientId = "4p73onv4dcvokvd85gv6fbtrr8";
+      const redirectUri = "https://bonapetit-website.s3.us-east-1.amazonaws.com/callback.html";
+
+      const tokenUrl = `https://${domain}/oauth2/token`;
+
+      const body = new URLSearchParams({
+        grant_type: "authorization_code",
+        client_id: clientId,
+        code,
+        redirect_uri: redirectUri,
+      });
+
+      try {
+        const response = await fetch(tokenUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body,
+        });
+
+        const data = await response.json();
+
+        if (data.id_token) {
+          // שמירה ב־sessionStorage
+          sessionStorage.setItem("id_token", data.id_token);
+          sessionStorage.setItem("access_token", data.access_token);
+          sessionStorage.setItem("refresh_token", data.refresh_token);
+
+          // הפניה ל-index.html
+          window.location.href = "index.html";
+        } else {
+          console.error("❌ Token fetch failed:", data);
+          document.body.innerHTML = "<h2>❌ Failed to retrieve tokens.</h2>";
+        }
+      } catch (error) {
+        console.error("🔥 Error fetching tokens:", error);
+        document.body.innerHTML = "<h2>🔥 Unexpected error occurred.</h2>";
+      }
+    });
+  </script>
+</head>
+<body>
+  <h2>🔄 Authenticating... Please wait</h2>
+</body>
+</html>
