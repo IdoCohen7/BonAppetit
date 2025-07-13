@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: BonAppetit CloudFormation Template - Infrastructure as Code
+
+Parameters:
+  Environment:
+    Type: String
+    Default: prod
+    AllowedValues:
+      - dev
+      - prod
+
+Resources:
+  DeployBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub bonappetit-deploy-bucket-${Environment}
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub bonappetit-lambda-role-${Environment}
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaBasicExecution
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+              - Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource: "*"
+
+  GetOrdersFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub get-orders-${Environment}
+      Handler: get_orders.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.12
+      Timeout: 10
+      Code:
+        S3Bucket: !Sub bonappetit-deploy-bucket-${Environment}
+        S3Key: lambdas/GetOrdersFunction.zip
+
+  UpdatePickupOrderFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub update-pickup-order-${Environment}
+      Handler: update_pickup.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.12
+      Timeout: 10
+      Code:
+        S3Bucket: !Sub bonappetit-deploy-bucket-${Environment}
+        S3Key: lambdas/UpdatePickupOrderFunction.zip
+
+  GetMonthlyHistoryFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub get-monthly-history-${Environment}
+      Handler: get_history.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.12
+      Timeout: 10
+      Code:
+        S3Bucket: !Sub bonappetit-deploy-bucket-${Environment}
+        S3Key: lambdas/GetMonthlyHistoryFunction.zip
+
+Outputs:
+  DeployBucketName:
+    Description: Name of the deployment bucket
+    Value: !Ref DeployBucket
+  LambdaExecutionRoleArn:
+    Description: IAM Role used by all Lambda functions
+    Value: !GetAtt LambdaExecutionRole.Arn
